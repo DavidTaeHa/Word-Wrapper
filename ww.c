@@ -7,7 +7,7 @@
 #include <sys/types.h>
 
 #ifndef DEBUG
-#define DEBUG 1
+#define DEBUG 0
 #endif
 
 #define BUFSIZE 32
@@ -104,13 +104,13 @@ void wrap_file(char *file_name, int columns)
     add_line(crnt);
     printf("------------------\n");
     // printf("%s\n", crnt);
-
+    /*
     for (int i = 0; i < line_count; i++)
     {
         printf("line %d: %s\n", i + 1, lines[i]);
     }
     printf("\n");
-
+    */
     // bool to check if a word length exceeds the max number of columns
     int too_long = 0;
     int start = 0;
@@ -176,6 +176,7 @@ void wrap_file(char *file_name, int columns)
         free(lines[i]);
     }
     free(lines);
+    close(fd);
 }
 
 int main(int argc, char **argv)
