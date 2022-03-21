@@ -24,6 +24,7 @@ void init_lines(void)
     line_array_size = LISTLEN;
 }
 
+//FIXME: Heap overflow error with this method
 void add_line(char *p)
 {
     if (DEBUG)
