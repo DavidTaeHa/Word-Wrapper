@@ -24,7 +24,6 @@ void init_lines(void)
     line_array_size = LISTLEN;
 }
 
-//FIXME: Heap overflow error with this method
 void add_line(char *p)
 {
     if (DEBUG)
@@ -34,7 +33,7 @@ void add_line(char *p)
         line_array_size *= 2;
         lines = realloc(lines, line_array_size * sizeof(char *));
     }
-    lines[line_count] = malloc(sizeof(char) * strlen(p)); //Error at this line with heap overflow
+    lines[line_count] = malloc(sizeof(char) * (strlen(p) + 1));
     strcpy(lines[line_count], p);
     line_count++;
 }
@@ -55,6 +54,8 @@ void wrap_file(char *file_name, int columns)
 
     char *token;
     int line_len = 0;
+
+    init_lines();
 
     fd = open(file_name, O_RDONLY);
     while ((bytes = read(fd, buf, BUFSIZE)) > 0)
@@ -127,6 +128,8 @@ void wrap_file(char *file_name, int columns)
     }
     printf("\n");
     */
+
+    //FIXME: Heap overflow Error at token handling
     // bool to check if a word length exceeds the max number of columns
     int too_long = 0;
     int start = 0;
