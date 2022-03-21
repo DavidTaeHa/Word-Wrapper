@@ -50,6 +50,7 @@ void wrap_file(char *file_name, int columns)
     int crnt_len = 0;
     int prev_space = 0;
     int prev_newline = 0;
+    char delim[] = "\n ";
 
     char *token;
     int line_len = 0;
@@ -79,6 +80,12 @@ void wrap_file(char *file_name, int columns)
                 continue;
             }
 
+            //Handle carriage return in bug
+            if(buf[i] == '\r'){
+                continue;
+            }
+
+            //Handle new line in buf
             if (buf[i] == '\n')
             {
                 buf[i] = ' ';
