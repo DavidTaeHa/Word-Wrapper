@@ -34,7 +34,7 @@ void add_line(char *p)
         line_array_size *= 2;
         lines = realloc(lines, line_array_size * sizeof(char *));
     }
-    lines[line_count] = malloc(sizeof(char) * strlen(p));
+    lines[line_count] = malloc(sizeof(char) * strlen(p)); //Error at this line with heap overflow
     strcpy(lines[line_count], p);
     line_count++;
 }
