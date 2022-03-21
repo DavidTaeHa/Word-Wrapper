@@ -62,8 +62,9 @@ void wrap_file(char *file_name, int columns)
             printf("Read %d bytes\n", bytes);
         for (int i = 0; i < bytes; i++)
         {
-            //Increasing length of array
-            if(crnt_len == crnt_max){
+            // Increasing length of array
+            if (crnt_len == crnt_max)
+            {
                 crnt = realloc(crnt, sizeof(char) * crnt_len * 2);
                 crnt_max = crnt_max * 2;
             }
@@ -109,8 +110,8 @@ void wrap_file(char *file_name, int columns)
     crnt[crnt_len] = '\0';
     // printf("length: %d\n", crnt_len);
     add_line(crnt);
-    //printf("------------------\n");
-    // printf("%s\n", crnt);
+    // printf("------------------\n");
+    //  printf("%s\n", crnt);
     /*
     for (int i = 0; i < line_count; i++)
     {
@@ -147,13 +148,18 @@ void wrap_file(char *file_name, int columns)
                 line_len = strlen(token) + line_len + 1;
                 strcat(line, token);
             }
+            // extra line error on two long words in a row and starting paragraph with long word
             else if (strlen(token) > columns)
             {
-                printf("%s<--too long\n", line);
+                if (strlen(line) != 0)
+                {
+                    printf("%s\n", line);
+                }
                 memset(line, 0, strlen(line));
-                printf("%s\n", token);
+                printf("%s :too long\n", token);
                 line_len = 0;
                 too_long = 1;
+                start = 0;
             }
             else
             {
@@ -182,8 +188,9 @@ void wrap_file(char *file_name, int columns)
         exit(EXIT_FAILURE);
     }
 
-    //free statements for any allocated memory
-    for(int i = 0; i < line_count; i++){
+    // free statements for any allocated memory
+    for (int i = 0; i < line_count; i++)
+    {
         free(lines[i]);
     }
     free(lines);
@@ -213,7 +220,7 @@ int main(int argc, char **argv)
         else if (S_ISDIR(temp.st_mode))
         {
             printf("Wrapping files in directory...\n");
-            //ADDME
+            // ADDME
         }
     }
     else
