@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-//gcc ww.c -fsanitize=address,undefined
+
 #ifndef DEBUG
 #define DEBUG 0
 #endif
@@ -40,11 +40,13 @@ void add_line(char *p)
 
 void wrap_file(char *file_name, int columns)
 {
+    printf("file name: %s\n", file_name);
+    printf("Columns: %d\n", columns);
     int fd, bytes;
     char buf[BUFSIZE];
     char *crnt = malloc(sizeof(char) * 10);
     int crnt_max = 10;
-    //memset(crnt, 0, strlen(crnt));
+    memset(crnt, 0, strlen(crnt));
     int crnt_len = 0;
     int prev_space = 0;
     int prev_newline = 0;
@@ -70,11 +72,6 @@ void wrap_file(char *file_name, int columns)
                 crnt_max = crnt_max * 2;
             }
 
-            //skip carriage return
-            if(buf[i] == '\r' || buf[i] == '\v' || buf[i] == '\f'){
-                continue;
-            }
-
             // Two lines in a row
             if (prev_newline == 1 && buf[i] == '\n')
             {
@@ -85,6 +82,12 @@ void wrap_file(char *file_name, int columns)
                 continue;
             }
 
+            //Handle carriage return in bug
+            if(buf[i] == '\r'){
+                continue;
+            }
+
+            //Handle new line in buf
             if (buf[i] == '\n')
             {
                 buf[i] = ' ';
@@ -96,7 +99,7 @@ void wrap_file(char *file_name, int columns)
             }
 
             // Handle consevutive spaces
-            if (prev_space == 1 && (buf[i] == ' ' || buf[i] == '\t'))
+            if (prev_space == 1 && buf[i] == ' ')
             {
                 continue;
             }
@@ -125,15 +128,14 @@ void wrap_file(char *file_name, int columns)
     }
     printf("\n");
     */
+
+    //FIXME: Heap overflow Error at token handling
     // bool to check if a word length exceeds the max number of columns
     int too_long = 0;
     int start = 0;
     char *line = malloc(sizeof(char) * crnt_max);
     int line_max = crnt_max;
-    for(int i = 0; i < line_count; i++){
-        line[i] = '\0';
-    }
-    //memset(line, 0, strlen(line));
+    memset(line, 0, strlen(line));
     for (int i = 0; i < line_count; i++)
     {
         if (strlen(lines[i]) == 0)
@@ -165,7 +167,6 @@ void wrap_file(char *file_name, int columns)
                     printf("%s\n", line);
                 }
                 memset(line, 0, strlen(line));
-
                 printf("%s :too long\n", token);
                 line_len = 0;
                 too_long = 1;
@@ -175,7 +176,6 @@ void wrap_file(char *file_name, int columns)
             {
                 printf("%s\n", line);
                 memset(line, 0, strlen(line));
-                
                 strcat(line, token);
                 line_len = strlen(token);
             }
@@ -188,10 +188,7 @@ void wrap_file(char *file_name, int columns)
             printf("\n");
         }
 
-        //memset(line, 0, strlen(line));
-        for(int i = 0; i < line_count; i++){
-            line[i] = '\0';
-        }
+        memset(line, 0, strlen(line));
         line_len = 0;
         start = 0;
     }
@@ -227,6 +224,7 @@ int main(int argc, char **argv)
         // Second arg is a file
         if (S_ISREG(temp.st_mode))
         {
+            printf("Wrapping text file...\n");
             wrap_file(argv[2], atoi(argv[1]));
         }
         // Second arg is a directory
