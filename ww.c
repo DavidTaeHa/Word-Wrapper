@@ -44,12 +44,13 @@ void wrap_file(char *file_name, int columns)
     printf("Columns: %d\n", columns);
     int fd, bytes;
     char buf[BUFSIZE];
-    char crnt[1000000];
+    char *crnt = malloc(sizeof(char) * 10);
+    int crnt_max = 10;
+    memset(crnt, 0, strlen(crnt));
     int crnt_len = 0;
     int prev_space = 0;
     int prev_newline = 0;
 
-    char line[1000000];
     char *token;
     int line_len = 0;
 
@@ -61,13 +62,19 @@ void wrap_file(char *file_name, int columns)
             printf("Read %d bytes\n", bytes);
         for (int i = 0; i < bytes; i++)
         {
+            //Increasing length of array
+            if(crnt_len == crnt_max){
+                crnt = realloc(crnt, sizeof(char) * crnt_len * 2);
+                crnt_max = crnt_max * 2;
+            }
+
             // Two lines in a row
             if (prev_newline == 1 && buf[i] == '\n')
             {
                 crnt[crnt_len] = '\0';
                 add_line(crnt);
                 crnt_len = 0;
-                memset(crnt, 0, sizeof(crnt));
+                memset(crnt, 0, strlen(crnt));
                 continue;
             }
 
@@ -95,14 +102,14 @@ void wrap_file(char *file_name, int columns)
                 prev_space = 0;
             }
 
-            strncat(crnt, &buf[i], 1);
+            crnt[crnt_len] = buf[i];
             crnt_len++;
         }
     }
     crnt[crnt_len] = '\0';
     // printf("length: %d\n", crnt_len);
     add_line(crnt);
-    printf("------------------\n");
+    //printf("------------------\n");
     // printf("%s\n", crnt);
     /*
     for (int i = 0; i < line_count; i++)
@@ -114,6 +121,9 @@ void wrap_file(char *file_name, int columns)
     // bool to check if a word length exceeds the max number of columns
     int too_long = 0;
     int start = 0;
+    char *line = malloc(sizeof(char) * crnt_max);
+    int line_max = crnt_max;
+    memset(line, 0, strlen(line));
     for (int i = 0; i < line_count; i++)
     {
         if (strlen(lines[i]) == 0)
@@ -139,8 +149,8 @@ void wrap_file(char *file_name, int columns)
             }
             else if (strlen(token) > columns)
             {
-                printf("%s\n", line);
-                memset(line, 0, sizeof(line));
+                printf("%s<--too long\n", line);
+                memset(line, 0, strlen(line));
                 printf("%s\n", token);
                 line_len = 0;
                 too_long = 1;
@@ -148,7 +158,7 @@ void wrap_file(char *file_name, int columns)
             else
             {
                 printf("%s\n", line);
-                memset(line, 0, sizeof(line));
+                memset(line, 0, strlen(line));
                 strcat(line, token);
                 line_len = strlen(token);
             }
@@ -161,8 +171,9 @@ void wrap_file(char *file_name, int columns)
             printf("\n");
         }
 
-        memset(line, 0, sizeof(line));
+        memset(line, 0, strlen(line));
         line_len = 0;
+        start = 0;
     }
 
     if (too_long == 1)
@@ -176,6 +187,8 @@ void wrap_file(char *file_name, int columns)
         free(lines[i]);
     }
     free(lines);
+    free(crnt);
+    free(line);
     close(fd);
 }
 
@@ -199,6 +212,8 @@ int main(int argc, char **argv)
         // Second arg is a directory
         else if (S_ISDIR(temp.st_mode))
         {
+            printf("Wrapping files in directory...\n");
+            //ADDME
         }
     }
     else
