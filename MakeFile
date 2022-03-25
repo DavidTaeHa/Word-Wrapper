@@ -1,0 +1,8 @@
+TARGET1 = ww
+CC = gcc
+CFLAGS = -g -fsanitize=address,undefined -Wall -Werror
+
+all: $(TARGET1)
+
+$(TARGET1): $(TARGET1) $(TARGET1).c
+	$(CC) $(CFLAGS) -o ww $(TARGET1).c

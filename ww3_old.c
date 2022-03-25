@@ -7,35 +7,35 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <ctype.h>
+// gcc ww3.c -fsanitize=address,undefined
 #ifndef DEBUG
 #define DEBUG 0
 #endif
 
-// Set to 1, Best at 4.
-#define BUFFSIZE 1
-// Choosing large value for user input
-#define INPTSIZE 4096
+#define BUFSIZE 32
 
-static int exitCode = EXIT_SUCCESS;
+int exitCode = EXIT_SUCCESS;
 
 void wrap_file(int file_in, int file_out, int columns)
 {
-    int length = BUFFSIZE, bytes = 0, brite = 0, last = 0, nLin = 0, nPar = 0, n = 0, fLen;
-    char *buf = malloc(sizeof(char) * BUFFSIZE);
+    int length = BUFSIZE, bytes = 0, totBytes = 0, brite = 0, last = 0, nLin = 0, nPar = 0, n = 0, fLen;
+    char *buf = malloc(sizeof(char) * BUFSIZE);
     char *word = calloc(length, sizeof(char));
     if (DEBUG)
     {
         printf("Debugging:\n");
     }
-    while ((bytes = read(file_in, buf, BUFFSIZE)) > 0)
+    while ((bytes = read(file_in, buf, BUFSIZE)) > 0)
     {
-        for (size_t i = 0; i < bytes; ++i)
+        if (DEBUG)
         {
-            // Read char in buffer
-            if (DEBUG)
+            for (size_t i = 0; i < BUFSIZE; i++)
             {
                 printf("%ld: '%c'\n", i, buf[i]);
             }
+        }
+        for (size_t i = 0; i < bytes; ++i)
+        {
             if (isspace(buf[i]))
             {
                 if (n)
@@ -45,19 +45,16 @@ void wrap_file(int file_in, int file_out, int columns)
                     {
                         fLen++;
                     }
-                    // Word will exceed maximum width, requires separate line
                     if (fLen > columns)
                     {
                         write(file_out, "\n", 1);
                         *&brite = 0;
                     }
-                    // Adds space before next word on same line
                     if (brite != 0 && !last)
                     {
                         *&brite += write(file_out, " ", 1);
                     }
                     *&brite += write(file_out, &word[0], n);
-                    // Written word exceeded given width
                     if (brite > columns)
                     {
                         if (DEBUG)
@@ -66,10 +63,10 @@ void wrap_file(int file_in, int file_out, int columns)
                         }
                         exitCode = EXIT_FAILURE;
                     }
+                    totBytes += brite;
                     if (DEBUG)
                     {
-                        printf("        Checked %d Bytes of the word '%s'\n", brite, word);
-                        printf("        Added %d Bytes of the word '%s'\n", n, word);
+                        printf("        Added %d Bytes of Word '%s'\n", brite, word);
                     }
                     free(word);
                     word = calloc(length, sizeof(char));
@@ -81,7 +78,7 @@ void wrap_file(int file_in, int file_out, int columns)
                     {
                         if (DEBUG)
                         {
-                            printf("        New Line\n");
+                            printf("        New Line\n", word);
                         }
                         nLin = 1;
                     }
@@ -89,7 +86,7 @@ void wrap_file(int file_in, int file_out, int columns)
                     {
                         if (DEBUG)
                         {
-                            printf("        Paragraph Ended\n");
+                            printf("        Paragraph Ended\n", word);
                         }
                         write(file_out, "\n\n", 2);
                         brite = nLin = 0;
@@ -105,28 +102,28 @@ void wrap_file(int file_in, int file_out, int columns)
                     word = realloc(word, sizeof(char) * (length *= 2));
                 }
                 word[n++] = buf[i];
-                if (DEBUG)
-                {
-                    printf("    Current Word: '%s'\n", word);
-                }
                 nLin = nPar = 0;
             }
         }
+        if (DEBUG)
+        {
+            printf("    Read %d Bytes\n", bytes);
+            printf("    Wrote %d Bytes\n", totBytes);
+        }
+        totBytes = 0;
         free(buf);
-        buf = malloc(sizeof(char) * BUFFSIZE);
+        buf = malloc(sizeof(char) * BUFSIZE);
     }
     fLen = *&brite + n;
     if (*&brite != 0)
     {
         fLen++;
     }
-    // Word will exceed maximum width, requires separate line
     if (fLen > columns)
     {
         write(file_out, "\n", 1);
         *&brite = 0;
     }
-    // Adds space before final word
     if (brite != 0 && !last)
     {
         *&brite += write(file_out, " ", 1);
@@ -134,10 +131,8 @@ void wrap_file(int file_in, int file_out, int columns)
     *&brite += write(file_out, &word[0], n);
     if (DEBUG)
     {
-        printf("        Checked %d Bytes of the word '%s'\n", brite, word);
-        printf("        Added %d Bytes of the word '%s'\n", n, word);
+        printf("        Added %d Bytes of Word '%s'\n", brite, word);
     }
-    // Final written word exceeded given width
     if (brite > columns)
     {
         if (DEBUG)
@@ -153,18 +148,31 @@ void wrap_file(int file_in, int file_out, int columns)
 
 int main(int argc, char **argv)
 {
-
-    if (argc > 3 || argc < 2)
+    if (argc != 3 && argc != 2)
     {
         printf("Incorrect number of arguments\n");
-        exit(EXIT_FAILURE);
+        exitCode = EXIT_FAILURE;
     }
 
     struct stat temp;
-    // If second argument is an existing file or directory
-    if ((stat(argv[2], &temp) != -1) && (atoi(argv[1]) > 0))
+
+    //Input gets taken from STDIN
+    if (argc == 2)
     {
-        // Second argument is a file that exists
+        if (DEBUG)
+        {
+            printf("\nSTDIN wrapped to STDOUT\n");
+        }
+        //char *input = malloc(sizeof(char) * 100);
+        //scanf("%s", &input);
+        //printf("%s\n", input);
+        int inText = open(0, O_RDONLY);
+        wrap_file(inText, 1, atoi(argv[1]));
+        close(inText);
+    }
+    else if (stat(argv[2], &temp) != -1) // Check the return value of stat
+    {
+        // Second arg is a file
         if (S_ISREG(temp.st_mode))
         {
             if (DEBUG)
@@ -175,12 +183,12 @@ int main(int argc, char **argv)
             wrap_file(inText, 1, atoi(argv[1]));
             close(inText);
         }
-        // Second argument is a directory that exists
+        // Second arg is a directory
         else if (S_ISDIR(temp.st_mode))
         {
             if (DEBUG)
             {
-                printf("\nWrapping files in directory '%s'\n", argv[2]);
+                printf("Wrapping files in directory '%s'\n", argv[2]);
             }
             struct dirent *f;
             DIR *fd = opendir(argv[2]);
@@ -188,18 +196,10 @@ int main(int argc, char **argv)
             int count = 1;
             while ((f = readdir(fd)) != NULL)
             {
-                if (f->d_name[0] == '.')
-                {
-                    printf("Skipping: '%s'\n", f->d_name);
-                }
-                else if (strstr(f->d_name, "wrap.") == f->d_name)
-                {
-                    printf("File to overwrite: '%s'\n", f->d_name);
-                }
-                else if (strstr(f->d_name, ".txt"))
+                if (strstr(f->d_name, ".txt"))
                 {
                     int inText = open(f->d_name, O_RDONLY);
-                    char *newFile = calloc(strlen(f->d_name) + 6, sizeof(char));
+                    char *newFile = calloc(strlen(f->d_name) + 5, sizeof(char));
                     strcpy(newFile, "wrap.");
                     strcat(newFile, f->d_name);
                     if (DEBUG)
@@ -217,53 +217,9 @@ int main(int argc, char **argv)
             closedir(fd);
         }
     }
-    // If second arguments file name does not exist read from STDIN
-    else if (atoi(argv[1]) > 0 && argc == 2)
-    {
-        char *userStr = malloc(sizeof(char) * INPTSIZE);
-        fgets(userStr, INPTSIZE, stdin);
-        // Creating a temporary file
-        FILE *fp = fopen("temp.txt", "w+");
-        if (fp)
-        {
-            fputs(userStr, fp);
-        }
-        // If there was an error retrieving the file
-        else
-        {
-            perror("temp.txt");
-            exitCode = EXIT_FAILURE;
-        }
-        fclose(fp);
-        free(userStr);
-        // If the file exists proceed
-        if ((stat("temp.txt", &temp) != -1))
-        {
-            if (DEBUG)
-            {
-                printf("\nTemporary file '%s' wrapped to STDOUT\n", "temp.txt");
-            }
-            int inText = open("temp.txt", O_RDONLY);
-            wrap_file(inText, 1, atoi(argv[1]));
-            close(inText);
-        }
-        // Remove temporary file as it is no longer needed and should not exist.
-        remove("temp.txt");
-    }
     else
     {
-        if (atoi(argv[1]) < 0)
-        {
-            printf("Error: Width should be a positive integer");
-        }
-        else if (argc > 3 || argc < 2)
-        {
-            printf("Error: Not enough arguments");
-        }
-        else if ((stat(argv[2], &temp) == -1))
-        {
-            perror(argv[2]);
-        }
+        perror(argv[2]);
         exitCode = EXIT_FAILURE;
     }
     return exitCode;
