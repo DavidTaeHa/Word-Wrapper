@@ -223,7 +223,7 @@ int main(int argc, char **argv)
         char *userStr = malloc(sizeof(char) * INPTSIZE);
         fgets(userStr, INPTSIZE, stdin);
         // Creating a temporary file
-        FILE *fp = fopen("temp.txt", "w+");
+        FILE *fp = fopen("switcharoo.txt", "w+");
         if (fp)
         {
             fputs(userStr, fp);
@@ -231,24 +231,24 @@ int main(int argc, char **argv)
         // If there was an error retrieving the file
         else
         {
-            perror("temp.txt");
+            perror("switcharoo.txt");
             exitCode = EXIT_FAILURE;
         }
         fclose(fp);
         free(userStr);
         // If the file exists proceed
-        if ((stat("temp.txt", &temp) != -1))
+        if ((stat("switcharoo.txt", &temp) != -1))
         {
             if (DEBUG)
             {
-                printf("\nTemporary file '%s' wrapped to STDOUT\n", "temp.txt");
+                printf("\nTemporary file '%s' wrapped to STDOUT\n", "switcharoo.txt");
             }
-            int inText = open("temp.txt", O_RDONLY);
+            int inText = open("switcharoo.txt", O_RDONLY);
             wrap_file(inText, 1, atoi(argv[1]));
             close(inText);
         }
         // Remove temporary file as it is no longer needed and should not exist.
-        remove("temp.txt");
+        remove("switcharoo.txt");
     }
     else
     {
