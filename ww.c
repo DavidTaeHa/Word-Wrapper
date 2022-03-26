@@ -162,7 +162,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     
-    if(!isdigit(argv[1]))
+    if(!isdigit((char) argv[1][0]))
     {
         printf("Invalid width value.\n");
         exit(EXIT_FAILURE);
