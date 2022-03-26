@@ -162,6 +162,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     
+    //Checks if argv[1] is a positive number
     if(!isdigit((char) argv[1][0]))
     {
         printf("Invalid width value.\n");
@@ -270,11 +271,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        if (atoi(argv[1]) < 0)
-        {
-            printf("Error: Width should be a positive integer");
-        }
-        else if (argc > 3 || argc < 2)
+        if (argc > 3 || argc < 2)
         {
             printf("Error: Not enough arguments");
         }
