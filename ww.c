@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <time.h>
+
 #ifndef DEBUG
 #define DEBUG 0
 #endif
@@ -153,10 +155,16 @@ void wrap_file(int file_in, int file_out, int columns)
 
 int main(int argc, char **argv)
 {
-
+    
     if (argc > 3 || argc < 2)
     {
         printf("Incorrect number of arguments\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    if(!isdigit(argv[1]))
+    {
+        printf("Invalid width value.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -226,6 +234,7 @@ int main(int argc, char **argv)
         char *tempName = malloc(sizeof(char) * 11);
         char *tempNum = malloc(sizeof(char) * 6);
         strcpy(tempName, "temp.");
+        srand(time(NULL));
         int nameNum = rand() % (99999 - 10000) + 10000;
         sprintf(tempNum, "%d", nameNum);
         strcat(tempName, tempNum);
