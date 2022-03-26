@@ -162,6 +162,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     
+    //Checks if argv[1] is a positive number
     if(!isdigit((char) argv[1][0]))
     {
         printf("Invalid width value.\n");
@@ -170,7 +171,7 @@ int main(int argc, char **argv)
 
     struct stat temp;
     // If second argument is an existing file or directory
-    if ((stat(argv[2], &temp) != -1) && (atoi(argv[1]) > 0))
+    if (stat(argv[2], &temp) != -1)
     {
         // Second argument is a file that exists
         if (S_ISREG(temp.st_mode))
@@ -226,7 +227,7 @@ int main(int argc, char **argv)
         }
     }
     // If second arguments file name does not exist read from STDIN
-    else if (atoi(argv[1]) > 0 && argc == 2)
+    else if (argc == 2)
     {
         char *userStr = malloc(sizeof(char) * INPTSIZE);
         fgets(userStr, INPTSIZE, stdin);
@@ -270,11 +271,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        if (atoi(argv[1]) < 0)
-        {
-            printf("Error: Width should be a positive integer");
-        }
-        else if (argc > 3 || argc < 2)
+        if (argc > 3 || argc < 2)
         {
             printf("Error: Not enough arguments");
         }
