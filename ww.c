@@ -230,29 +230,50 @@ int main(int argc, char **argv)
     else if (argc == 2)
     {
         char *userStr = malloc(sizeof(char) * INPTSIZE);
-        fgets(userStr, INPTSIZE, stdin);
+        //fgets(userStr, INPTSIZE, stdin);
         // Creating a temporary file
         char *tempName = malloc(sizeof(char) * 11);
         char *tempNum = malloc(sizeof(char) * 6);
-        strcpy(tempName, "temp.");
+        strcpy(tempName, "temp");
         srand(time(NULL));
         int nameNum = rand() % (99999 - 10000) + 10000;
         sprintf(tempNum, "%d", nameNum);
         strcat(tempName, tempNum);
+        strcat(tempName, ".txt");
         free(tempNum);
-        
+        /*
         FILE *fp = fopen(tempName, "w+");
         if (fp)
         {
             fputs(userStr, fp);
         }
+        */
+
+       //Infinite loop when using this implementation
+       /*
+        while((bytes = read(0, buf, BUFFSIZE)) > 0){
+            for(size_t i = 0; i < bytes; ++i){
+                write(outText, &buf[i], 1);
+            }
+        }
+        */
+
+        //Reads from stdin and prints out to a temp file
+        int outText = open(tempName, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+        read(0, userStr, INPTSIZE);
+        userStr[strlen(userStr)] = '\0';
+        write(outText, userStr, strlen(userStr));
+
         // If there was an error retrieving the file
+        /*
         else
         {
             perror(tempName);
             exitCode = EXIT_FAILURE;
         }
-        fclose(fp);
+        */
+
+        //fclose(fp);
         free(userStr);
         // If the file exists proceed
         if ((stat(tempName, &temp) != -1))
@@ -266,6 +287,7 @@ int main(int argc, char **argv)
             close(inText);
         }
         // Remove temporary file as it is no longer needed and should not exist.
+        close(outText);
         remove(tempName);
         free(tempName);
     }
